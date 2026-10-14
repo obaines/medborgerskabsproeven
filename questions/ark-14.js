@@ -1,4 +1,4 @@
-// Fakta-ark 14: Det lokale selvstyre. 28 questions, written from the PDF.
+// Fakta-ark 14: Det lokale selvstyre. 29 questions, written from the PDF.
 // How to write/check questions: docs/writing-questions.md
 // One question per line. Everything inside push(...) must stay valid JSON.
 window.QUESTIONS.push(...[
@@ -29,5 +29,6 @@ window.QUESTIONS.push(...[
 {"id": "14-25", "ark": 14, "q": "Hvad hedder regionernes interesseorganisation?", "options": ["KL", "Danske Regioner", "Regionsforeningen"], "answer": 1, "explanation": "Regionernes interesseorganisation hedder Danske Regioner.", "page": 80, "quote": "Regionerne har en interesseorganisation, der hedder Danske Regioner."},
 {"id": "14-26", "ark": 14, "q": "Hvilken region hører Bornholm til?", "options": ["Region Hovedstaden", "Region Sjælland", "Region Syddanmark"], "answer": 0, "explanation": "Region Hovedstaden omfatter København og omegn, Nordsjælland og Bornholm.", "page": 80, "quote": "Region Hovedstaden (København og omegn, Nordsjælland og Bornholm)"},
 {"id": "14-27", "ark": 14, "q": "Hvilken region hører Fyn til?", "options": ["Region Sjælland", "Region Syddanmark", "Region Midtjylland"], "answer": 1, "explanation": "Region Syddanmark omfatter Fyn samt Syd- og Sønderjylland.", "page": 80, "quote": "Region Syddanmark (Fyn samt Syd- og Sønderjylland)"},
-{"id": "14-28", "ark": 14, "q": "Hvilken region hører Lolland-Falster til?", "options": ["Region Hovedstaden", "Region Sjælland", "Region Syddanmark"], "answer": 1, "explanation": "Region Sjælland omfatter Vest-, Midt- og Sydsjælland samt Lolland-Falster.", "page": 80, "quote": "Region Sjælland (Vestsjælland, Midtsjælland, Sydsjælland og Lolland-Falster)"}
+{"id": "14-28", "ark": 14, "q": "Hvilken region hører Lolland-Falster til?", "options": ["Region Hovedstaden", "Region Sjælland", "Region Syddanmark"], "answer": 1, "explanation": "Region Sjælland omfatter Vest-, Midt- og Sydsjælland samt Lolland-Falster.", "page": 80, "quote": "Region Sjælland (Vestsjælland, Midtsjælland, Sydsjælland og Lolland-Falster)"},
+{"id": "14-29", "ark": 14, "q": "Hvor mange medlemmer har hvert regionsråd?", "options": ["Mellem 9 og 15", "Mellem 25 og 47", "Mellem 101 og 179"], "answer": 1, "explanation": "Regionsrådene har hver mellem 25 og 47 medlemmer. Det passer med regionsloven § 8: 47 i Region Østdanmark, 31 i Midtjylland og Syddanmark, 25 i Nordjylland. (Fakta-ark 15 siger 41 i hvert regionsråd, men det er den gamle regel.)", "page": 80, "quote": "Regionsrådene har hver mellem 25 og 47 medlemmer."}
 ]);

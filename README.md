@@ -29,6 +29,8 @@ Built with **[Claude Code](https://claude.com/claude-code)** (Anthropic's AI cod
 
 The questions were written by Claude from the official PDF only. A script automatically checked that every quoted sentence really appears on the cited page. They have not been reviewed by any official body, so treat the app as a study aid, not as a guarantee of exam content.
 
+**Known errors in the material:** fact sheet 15 (p. 83) contradicts other parts of the material in two places. It says 49 % of Folketinget are women (the 2026 election result was 86 of 179, i.e. 48 %, as fact sheet 10 says), and it says each regional council has 41 members (regionsloven § 8 now sets 25–47, as fact sheet 14 says). Questions on these topics follow the verified figures and point out the error. Fact sheet 4 also lists a section on parental leave that is missing from the text.
+
 ## Files
 | File | Purpose |
 |---|---|
