@@ -88,6 +88,17 @@ function pickExam() {
 
 function showHome() {
   stopTimer();
+  if (!QUESTIONS.length) {
+    // Usually means the questions/ folder was not uploaded next to index.html.
+    app.innerHTML = `
+      <h1>Medborgerskabsprøven</h1>
+      <div class="card">
+        <p class="verdict bad">Ingen spørgsmål fundet.</p>
+        <p>Mappen <b>questions</b> (med filerne ark-01.js … ark-26.js) mangler ved siden af index.html.
+        Upload hele mappen igen, og genindlæs siden.</p>
+      </div>`;
+    return;
+  }
   const seen = QUESTIONS.filter(q => progress[q.id]);
   const mistakes = QUESTIONS.filter(q => progress[q.id] && !progress[q.id].lastCorrect);
   const acc = accuracy(QUESTIONS);
