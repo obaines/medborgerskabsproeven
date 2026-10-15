@@ -62,3 +62,9 @@ input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
 .dot.here { border-color: var(--accent); }
 .review { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; }
 #clock { font-variant-numeric: tabular-nums; }
+.tabs { display: flex; gap: 6px; margin-bottom: 4px; }
+.tab { flex: 1; padding: 8px 6px; font-size: 0.9rem; }
+.tab.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.paper { padding-left: 0; }
+.paper button { padding: 6px 14px; }
+.note { background: var(--bg); border-radius: 8px; padding: 8px 10px; }

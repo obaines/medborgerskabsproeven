@@ -7,11 +7,13 @@ A small study app I use to prepare for the Danish **Medborgerskabsprøven** (the
 > **Personal, non-commercial project.** Made for my own exam preparation. It is not an official resource and is not affiliated with or endorsed by SIRI, danskogproever.dk or the Danish Ministry of Immigration and Integration. Nothing is sold, and no data is collected.
 
 ## What the app does
-- **Practice questions:** about 960 multiple-choice questions in Danish (2–3 options, like the real test) covering all 26 *fakta-ark* in the official study material.
+- **Practice questions:** about 1,300 multiple-choice questions in Danish (2–3 options, like the real test) covering every testable fact in all 26 *fakta-ark* of the official study material.
 - **Explanations with sources:** after each answer it explains why, and shows the fact sheet, page number and the exact sentence from the official material, with a link to that page of the PDF.
 - **Choose topics:** practise any combination of fact sheets or topic groups, or everything.
 - **Spaced repetition:** questions you got wrong come back first, then ones you haven't seen. "Øv mine fejl" drills only your mistakes.
 - **Mock exam:** 25 questions, 30-minute timer, pass at 20 correct, with answers shown at the end, as in the real test.
+- **Real past papers, updated:** the 9 official papers from June 2022 to June 2026 (from danskogproever.dk), in their original order. Every answer was re-checked against the August 2026 material. 8 questions whose answer has changed (e.g. the king, the 2026 election, the current government) are updated and marked with a note.
+- **Review your answers:** after practice or an exam, see your wrong answers, your right answers, or all of them, each with explanation and source.
 - **Progress tracking:** accuracy per fact sheet. Progress is stored only in your own browser, and you can save or load a backup file.
 - **Official audio:** links to the official MP3 recordings of each fact sheet.
 - **Works offline:** it can be installed on a phone's home screen (in Chrome, choose "Add to home screen").
@@ -36,6 +38,7 @@ The questions were written by Claude from the official PDF only. A script automa
 |---|---|
 | `index.html`, `app.js`, `style.css` | The app |
 | `questions/ark-01.js` … `ark-26.js` | Questions, one file per fact sheet |
+| `questions/exams.js` | The 9 real past papers, updated to the current material |
 | `sheets.js` | Fact-sheet names, page ranges, topic groups, audio links |
 | `manifest.json`, `sw.js`, `icon-*.png` | Phone installation and offline support |
 | `laeremateriale.pdf` | Official study material (August 2026 edition) |

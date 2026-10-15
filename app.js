@@ -1,5 +1,6 @@
 // Medborgerskabsprøven practice app. Plain JavaScript, no build step.
-// Data: window.SHEETS (sheets.js) and window.QUESTIONS (questions/ark-NN.js).
+// Data: window.SHEETS (sheets.js), window.QUESTIONS (questions/ark-NN.js) and
+// window.EXAMS (questions/exams.js: real past papers, updated to the current material).
 // Progress and settings are stored in this browser's localStorage.
 
 const SHEETS = window.SHEETS;
@@ -8,6 +9,9 @@ const SHEET = Object.fromEntries(SHEETS.map(s => [s.ark, s]));
 const PDF_FILE = "laeremateriale.pdf";
 const STORAGE_KEY = "mbp-progress-v1";
 const SELECTION_KEY = "mbp-selection-v1";
+const PAPERS_KEY = "mbp-papers-v1"; // best score per past paper
+const MONTHS = ["januar", "februar", "marts", "april", "maj", "juni", "juli", "august", "september", "oktober", "november", "december"];
+const PAPERS = groupPapers(window.EXAMS || []);
 const EXAM = { questions: 25, minutes: 30, passAt: 20 }; // the real exam
 const app = document.getElementById("app");
 
@@ -21,6 +25,7 @@ function save(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage unavailable */ }
 }
 let progress = load(STORAGE_KEY, {});
+let paperScores = load(PAPERS_KEY, {});
 
 function record(id, isCorrect) {
   const p = progress[id] || { seen: 0, correct: 0 };
@@ -46,6 +51,15 @@ function shuffle(list) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+// Past papers: { id: "2022-06", name: "Juni 2022", questions: [...] }, newest first.
+function groupPapers(list) {
+  const ids = [...new Set(list.map(q => q.exam))].sort().reverse();
+  return ids.map(id => {
+    const [year, month] = id.split("-").map(Number);
+    const name = MONTHS[month - 1][0].toUpperCase() + MONTHS[month - 1].slice(1) + " " + year;
+    return { id, name, questions: list.filter(q => q.exam === id) };
+  });
 }
 function questionsFor(ark) {
   return QUESTIONS.filter(q => q.ark === ark);
@@ -100,7 +114,7 @@ function showHome() {
     return;
   }
   const seen = QUESTIONS.filter(q => progress[q.id]);
-  const mistakes = QUESTIONS.filter(q => progress[q.id] && !progress[q.id].lastCorrect);
+  const mistakes = QUESTIONS.concat(window.EXAMS || []).filter(q => progress[q.id] && !progress[q.id].lastCorrect);
   const acc = accuracy(QUESTIONS);
   const selected = new Set(load(SELECTION_KEY, SHEETS.map(s => s.ark)));
   const groups = [...new Set(SHEETS.map(s => s.group))];
@@ -120,6 +134,22 @@ function showHome() {
       <p class="muted">${EXAM.questions} spørgsmål fra alle emner · ${EXAM.minutes} minutter · bestået ved ${EXAM.passAt} rigtige. Du får svarene til sidst, som til den rigtige prøve.</p>
       <button class="primary" id="exam">Start prøveeksamen</button>
     </div>
+
+    ${PAPERS.length ? `
+    <div class="card">
+      <h2>Rigtige prøver (opdateret)</h2>
+      <p class="muted">De rigtige prøver fra ${PAPERS[PAPERS.length - 1].name.toLowerCase()} til ${PAPERS[0].name.toLowerCase()}, med samme spørgsmål og rækkefølge. Spørgsmål, hvor svaret er ændret i det nye læremateriale, er opdateret. Du ser en note ved dem, når du får svarene.</p>
+      ${PAPERS.map(paper => {
+        const score = paperScores[paper.id];
+        return `
+        <div class="sheet paper">
+          <span>${esc(paper.name)}
+            <span class="muted small">· ${score ? `bedste: ${score.best}/${paper.questions.length}${score.best >= EXAM.passAt ? " ✓" : ""}` : "ikke taget"}</span>
+          </span>
+          <button class="small" data-paper="${esc(paper.id)}">Start</button>
+        </div>`;
+      }).join("")}
+    </div>` : ""}
 
     <div class="card">
       <h2>Øv emner</h2>
@@ -187,7 +217,11 @@ function showHome() {
   };
   const mistakesBtn = document.getElementById("mistakes");
   if (mistakesBtn) mistakesBtn.onclick = () => startPractice(shuffle(mistakes));
-  document.getElementById("exam").onclick = startExam;
+  document.getElementById("exam").onclick = () => startExam(pickExam(), null);
+  app.querySelectorAll("[data-paper]").forEach(btn => btn.onclick = () => {
+    const paper = PAPERS.find(p => p.id === btn.dataset.paper);
+    startExam(paper.questions, paper);
+  });
 
   // Backup
   document.getElementById("export").onclick = exportProgress;
@@ -196,7 +230,9 @@ function showHome() {
   resetBtn.onclick = () => {
     if (resetBtn.dataset.confirm) {
       progress = {};
+      paperScores = {};
       save(STORAGE_KEY, progress);
+      save(PAPERS_KEY, paperScores);
       showHome();
     } else {
       resetBtn.dataset.confirm = "1";
@@ -223,7 +259,7 @@ function sheetRow(s, selected) {
 }
 
 function exportProgress() {
-  const data = { app: "medborgerskabsproeven", exported: new Date().toISOString(), progress };
+  const data = { app: "medborgerskabsproeven", exported: new Date().toISOString(), progress, papers: paperScores };
   const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -243,6 +279,11 @@ function importProgress(event) {
       if (!progress[id] || (p.lastSeen || 0) > (progress[id].lastSeen || 0)) progress[id] = p;
     });
     save(STORAGE_KEY, progress);
+    Object.entries(data.papers || {}).forEach(([id, score]) => {
+      const old = paperScores[id];
+      paperScores[id] = old ? { ...old, best: Math.max(old.best, score.best) } : score;
+    });
+    save(PAPERS_KEY, paperScores);
     showHome();
   }).catch(() => {
     event.target.value = "";
@@ -321,11 +362,11 @@ function sourceHtml(q) {
 
 let timer = null;
 
-function startExam() {
-  const questions = pickExam();
+// paper = a real past paper (fixed questions and option order), or null for a random mock exam
+function startExam(questions, paper) {
   session = {
-    mode: "exam", questions, index: 0, answers: new Array(questions.length).fill(null),
-    orders: questions.map(q => shuffle(q.options.map((_, i) => i))),
+    mode: "exam", paper, questions, index: 0, answers: new Array(questions.length).fill(null),
+    orders: questions.map(q => paper ? q.options.map((_, i) => i) : shuffle(q.options.map((_, i) => i))),
     endsAt: Date.now() + EXAM.minutes * 60 * 1000,
   };
   timer = setInterval(tick, 1000);
@@ -352,7 +393,7 @@ function showExamQuestion() {
 
   app.innerHTML = `
     <div class="top">
-      <span class="muted">Spørgsmål ${i + 1} af ${session.questions.length} · ${answered} besvaret</span>
+      <span class="muted">${session.paper ? esc(session.paper.name) + " · " : ""}Spørgsmål ${i + 1} af ${session.questions.length} · ${answered} besvaret</span>
       <b id="clock"></b>
     </div>
     <div class="card">
@@ -399,6 +440,12 @@ function finishExam(timeUp) {
   stopTimer();
   session.questions.forEach((q, n) => record(q.id, session.answers[n] === q.answer));
   session.timeUp = timeUp;
+  if (session.paper) {
+    const right = session.questions.filter((q, n) => session.answers[n] === q.answer).length;
+    const old = paperScores[session.paper.id];
+    paperScores[session.paper.id] = { best: Math.max(right, old ? old.best : 0), last: right, date: Date.now() };
+    save(PAPERS_KEY, paperScores);
+  }
   showResult();
 }
 
@@ -415,7 +462,7 @@ function showResult() {
   const passed = mode === "exam" ? right >= EXAM.passAt : pct >= 80;
 
   app.innerHTML = `
-    <h1>${mode === "exam" ? "Resultat af prøveeksamen" : "Resultat"}</h1>
+    <h1>${session.paper ? `Resultat: prøven fra ${esc(session.paper.name.toLowerCase())}` : mode === "exam" ? "Resultat af prøveeksamen" : "Resultat"}</h1>
     ${session.timeUp ? `<p class="verdict bad">Tiden er gået.</p>` : ""}
     <div class="card">
       <h2>${right} af ${results.length} rigtige (${pct}%)</h2>
@@ -425,22 +472,44 @@ function showResult() {
           : (passed ? "Det svarer til bestået (mindst 80%)." : "Til prøven skal du have mindst 80% rigtige (20 af 25).")}
       </p>
     </div>
-    ${wrong.length ? `
+    ${results.length ? `
       <div class="card">
-        <h2>Dine fejl</h2>
-        ${wrong.map(r => `
-          <div class="review">
-            <b>${esc(r.q.q)}</b>
-            <p>Dit svar: ${r.chosen === null ? "<i>ikke besvaret</i>" : esc(r.q.options[r.chosen])}<br>
-               Rigtigt svar: <b>${esc(r.q.options[r.q.answer])}</b></p>
-            <p>${esc(r.q.explanation)}</p>
-            ${sourceHtml(r.q)}
-          </div>`).join("")}
+        <h2>Gennemgå dine svar</h2>
+        <div class="tabs">
+          <button class="tab" data-tab="wrong">Forkerte (${wrong.length})</button>
+          <button class="tab" data-tab="right">Rigtige (${right})</button>
+          <button class="tab" data-tab="all">Alle (${results.length})</button>
+        </div>
+        <div id="review-list"></div>
       </div>` : ""}
     <button class="primary" id="home">Tilbage til start</button>
   `;
+  function showTab(tab) {
+    const list = results.filter(r => tab === "all" || r.correct === (tab === "right"));
+    app.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    document.getElementById("review-list").innerHTML = list.length
+      ? list.map(reviewHtml).join("")
+      : `<p class="muted">Ingen spørgsmål her.</p>`;
+  }
+  if (results.length) {
+    app.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+    showTab(wrong.length ? "wrong" : "all");
+  }
   document.getElementById("home").onclick = showHome;
   window.scrollTo(0, 0);
+}
+
+function reviewHtml(r) {
+  return `
+    <div class="review">
+      <p class="verdict ${r.correct ? "good" : "bad"}">${r.correct ? "✓ Rigtigt" : "✗ Forkert"}</p>
+      <b>${esc(r.q.q)}</b>
+      <p>Dit svar: ${r.chosen === null || r.chosen === undefined ? "<i>ikke besvaret</i>" : esc(r.q.options[r.chosen])}<br>
+         Rigtigt svar: <b>${esc(r.q.options[r.q.answer])}</b></p>
+      <p>${esc(r.q.explanation)}</p>
+      ${r.q.note ? `<p class="note small"><b>${r.q.status === "new" ? "Nyt spørgsmål" : "Opdateret"}:</b> ${esc(r.q.note)}</p>` : ""}
+      ${sourceHtml(r.q)}
+    </div>`;
 }
 
 // ---------- Start ----------
